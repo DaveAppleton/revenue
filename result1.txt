@@ -1,0 +1,130 @@
+funding accounts
+userA
+Nonce :  0
+Gas Used  21000
+userB
+Nonce :  1
+Gas Used  21000
+userC
+Nonce :  2
+Gas Used  21000
+userD
+Nonce :  3
+Gas Used  21000
+userE
+Nonce :  4
+Gas Used  21000
+userF
+Nonce :  5
+Gas Used  21000
+Gas Used  521894
+Contract deployed at  0x6d84bF5945C02d1e2288D85752C5897511CE107e in tx  0x4f654632b322d2a400b01491717f371de83ee3507e42a67e4fcdb82ae0f1d279
+1 [banker profit 0.001]
+Gas Used  63654
+numTokens  : 0 Pot  : 0.001000000000000000 PotPerToken  : 0.000000000000000000
+2 [banker profit 0.001]
+Gas Used  33654
+numTokens  : 0 Pot  : 0.002000000000000000 PotPerToken  : 0.000000000000000000
+3 [banker profit 0.003]
+Gas Used  33654
+numTokens  : 0 Pot  : 0.005000000000000000 PotPerToken  : 0.000000000000000000
+4 [banker profit 0.007]
+Gas Used  33654
+numTokens  : 0 Pot  : 0.012000000000000000 PotPerToken  : 0.000000000000000000
+5 [banker profit 0.412]
+Gas Used  33654
+numTokens  : 0 Pot  : 0.424000000000000000 PotPerToken  : 0.000000000000000000
+6 [banker profit 0.123]
+Gas Used  33654
+numTokens  : 0 Pot  : 0.547000000000000000 PotPerToken  : 0.000000000000000000
+7 [banker contractbal ]
+Contract balance 0.547000000000000000
+8 [userA deposit 1]
+Gas Used  70392
+numTokens  : 1 Pot  : 0.547000000000000000 PotPerToken  : 0.000000000000000000
+9 [userB deposit 2]
+Gas Used  55392
+numTokens  : 3 Pot  : 0.547000000000000000 PotPerToken  : 0.000000000000000000
+10 [userC deposit 1]
+Gas Used  55392
+numTokens  : 4 Pot  : 0.547000000000000000 PotPerToken  : 0.000000000000000000
+11 [userA deposit 3]
+Gas Used  40441
+numTokens  : 7 Pot  : 0.547000000000000000 PotPerToken  : 0.000000000000000000
+12 [userD deposit 1]
+Gas Used  55392
+numTokens  : 8 Pot  : 0.547000000000000000 PotPerToken  : 0.000000000000000000
+13 [banker profit 0.003]
+Gas Used  41534
+numTokens  : 8 Pot  : 0.550000000000000000 PotPerToken  : 0.068750000000000000
+14 [banker contractbal ]
+Contract balance 0.550000000000000000
+15 [userE deposit 2]
+Gas Used  74592
+numTokens  : 10 Pot  : 0.550000000000000000 PotPerToken  : 0.068750000000000000
+16 [banker profit 0.003]
+Gas Used  37334
+numTokens  : 10 Pot  : 0.553000000000000000 PotPerToken  : 0.069050000000000000
+17 [banker contractbal ]
+Contract balance 0.553000000000000000
+18 [userB wdprofit 0]
+before bal: 0.999999999999944608 ,tokens: 0.000000000000000002 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.000000000000000000
+Gas Used  56840
+after  bal: 1.138099999999887768 ,tokens: 0.000000000000000002 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.069050000000000000
+19 [banker contractbal ]
+Contract balance 0.414900000000000000
+20 [userB balance ]
+bal: 1.138099999999887768 ,tokens: 0.000000000000000002 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.069050000000000000
+21 [userA deposit 1]
+Gas Used  78841
+numTokens  : 11 Pot  : 0.553000000000000000 PotPerToken  : 0.069050000000000000
+22 [banker profit 0.023]
+Gas Used  37334
+numTokens  : 11 Pot  : 0.576000000000000000 PotPerToken  : 0.071140909090909090
+23 [banker profit 0.123]
+Gas Used  37334
+numTokens  : 11 Pot  : 0.699000000000000000 PotPerToken  : 0.082322727272727271
+24 [banker profit 0.056]
+Gas Used  37334
+numTokens  : 11 Pot  : 0.755000000000000000 PotPerToken  : 0.087413636363636361
+25 [banker profit 0.023]
+Gas Used  37334
+numTokens  : 11 Pot  : 0.778000000000000000 PotPerToken  : 0.089504545454545451
+26 [banker profit 0.088]
+Gas Used  37334
+numTokens  : 11 Pot  : 0.866000000000000000 PotPerToken  : 0.097504545454545451
+27 [banker contractbal ]
+Contract balance 0.727900000000000000
+28 [userF deposit 2]
+Gas Used  74592
+numTokens  : 13 Pot  : 0.866000000000000000 PotPerToken  : 0.097504545454545451
+29 [userA wdtoken 0]
+before bal: 0.999999999999810326 ,tokens: 0.000000000000000005 ,accumulated: 0.276200000000000000 ,lastPotPerToken: 0.069050000000000000
+Gas Used  26800
+after  bal: 1.418472727272510781 ,tokens: 0.000000000000000000 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.097504545454545451
+30 [userB wdtoken 0]
+before bal: 1.138099999999887768 ,tokens: 0.000000000000000002 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.069050000000000000
+Gas Used  34399
+after  bal: 1.195009090908944271 ,tokens: 0.000000000000000000 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.097504545454545451
+31 [userC wdtoken 0]
+before bal: 0.999999999999944608 ,tokens: 0.000000000000000001 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.000000000000000000
+Gas Used  49399
+after  bal: 1.097504545454440660 ,tokens: 0.000000000000000000 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.097504545454545451
+32 [banker contractbal ]
+Contract balance 0.155013636363636392
+33 [banker stats ]
+numTokens  : 13 Pot  : 0.866000000000000000 PotPerToken  : 0.097504545454545451
+34 [userD wdtoken 0]
+before bal: 0.999999999999944608 ,tokens: 0.000000000000000001 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.000000000000000000
+Gas Used  49399
+after  bal: 1.097504545454440660 ,tokens: 0.000000000000000000 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.097504545454545451
+35 [userE wdtoken 0]
+before bal: 0.999999999999925408 ,tokens: 0.000000000000000002 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.068750000000000000
+Gas Used  34399
+after  bal: 1.057509090908981911 ,tokens: 0.000000000000000000 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.097504545454545451
+36 [userF wdtoken 0]
+before bal: 0.999999999999925408 ,tokens: 0.000000000000000002 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.097504545454545451
+Gas Used  23499
+after  bal: 0.999999999999901909 ,tokens: 0.000000000000000000 ,accumulated: 0.000000000000000000 ,lastPotPerToken: 0.097504545454545451
+37 [banker contractbal ]
+Contract balance 0.000000000000000039

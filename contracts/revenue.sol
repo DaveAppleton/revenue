@@ -1,14 +1,16 @@
 pragma solidity ^0.7.0;
 // SPDX-License-Identifier: MIT
 
-import "./Safemath.sol";
+import "./SafeMath.sol";
 
+// assumes unit (decimals = 0) tokens
 contract stakedRevenueToken {
     using SafeMath for uint256;
     uint256 potPerToken;
     uint256 numTokens;
     uint256 pot;
     uint256 pendingPot;
+    uint256 tokenBase;
 
     string  public name = "StakedRevenueContract";
 
@@ -20,12 +22,16 @@ contract stakedRevenueToken {
 
     mapping( address => Balance ) balances;
 
+    constructor(uint256 unitToken) {
+        tokenBase = unitToken;
+    }
+
     receive() external payable {
         pot = pot.add(msg.value);
         if (numTokens > 0) {
             uint256 amount = msg.value.add(pendingPot);
             pendingPot = 0;
-            potPerToken = potPerToken.add(amount.mul(1 ether).div(numTokens));
+            potPerToken = potPerToken.add(amount.mul(tokenBase).div(numTokens));
         } else {
             pendingPot = pendingPot.add(msg.value);
         }
@@ -33,7 +39,7 @@ contract stakedRevenueToken {
 
     function depositTokens(uint256 tokens) external {
         updateBalance();
-        numTokens += tokens;
+        numTokens = numTokens.add(tokens);
         Balance storage myBalance = balances[msg.sender];
         // update rewards
         myBalance.tokens = myBalance.tokens.add(tokens);
@@ -42,13 +48,14 @@ contract stakedRevenueToken {
 
     function updateBalance() internal {
         Balance storage myBalance = balances[msg.sender];
-        uint256 reward = myBalance.tokens.mul(potPerToken.sub(myBalance.lastPotPerToken)).div(1 ether);
+        uint256 reward = myBalance.tokens.mul(potPerToken.sub(myBalance.lastPotPerToken)).div(tokenBase);
         myBalance.accumulatedReward = myBalance.accumulatedReward.add(reward);
     }
 
-    function bumpBalance(address account) public view returns (uint) {
+    // debug function
+    function pendingReward(address account) public view returns (uint) {
         Balance storage myBalance = balances[account];
-        uint256 reward = myBalance.tokens.mul(potPerToken.sub(myBalance.lastPotPerToken)).div(1 ether);
+        uint256 reward = myBalance.tokens.mul(potPerToken.sub(myBalance.lastPotPerToken)).div(tokenBase);
         return reward;
     }
 
@@ -69,6 +76,7 @@ contract stakedRevenueToken {
             transferTokens(msg.sender,myBalance.tokens);
             delete balances[msg.sender];
         }
+        myBalance.lastPotPerToken = potPerToken;
         msg.sender.transfer(toPay);
     }
 

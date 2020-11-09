@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/csv"
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -11,17 +12,21 @@ import (
 	"github.com/DaveAppleton/etherUtils"
 	"github.com/DaveAppleton/memorykeys"
 	"github.com/DaveAppleton/revenue/contracts"
-	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind/backends"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/fsnotify/fsnotify"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var (
-	baseClient *backends.SimulatedBackend
+	baseClient  *backends.SimulatedBackend
+	srtContract *contracts.StakedRevenueToken
+	srtAddress  common.Address
+	userMap     map[string]common.Address
 )
 
 func getClient() (client *backends.SimulatedBackend, err error) {
@@ -86,7 +91,59 @@ func checkTxErrF(tx *types.Transaction, err error) {
 	checkTxErrB(tx, err, types.ReceiptStatusFailed)
 }
 
+func stats() {
+	stats, err := srtContract.Stats(nil)
+	chkErr(err)
+	fmt.Println(
+		"numTokens  :", stats.NumTokens,
+		"Pot  :", etherUtils.EtherToStr(stats.Pot),
+		"PotPerToken  :", etherUtils.EtherToStr(stats.PotPerToken),
+	)
+}
+
+func balance(addr *common.Address) {
+	bal, err := baseClient.BalanceAt(context.Background(), *addr, nil)
+	chkErr(err)
+	balData, err := srtContract.Balance(nil, *addr)
+	chkErr(err)
+	fmt.Println(
+		"bal:", etherUtils.EtherToStr(bal),
+		",tokens:", etherUtils.EtherToStr(balData.Tokens),
+		",accumulated:", etherUtils.EtherToStr(balData.AccumulatedReward),
+		",lastPotPerToken:", etherUtils.EtherToStr(balData.LastPotPerToken),
+	)
+}
+
+func contractBalance() {
+	bal, err := baseClient.BalanceAt(context.Background(), srtAddress, nil)
+	chkErr(err)
+	fmt.Println(
+		"Contract balance",
+		etherUtils.EtherToStr(bal),
+	)
+}
+
+func fundUsers(data [][]string, client *backends.SimulatedBackend) error {
+	fmt.Println("funding accounts")
+	userMap = make(map[string]common.Address)
+	for _, line := range data {
+		if _, ok := userMap[line[0]]; !ok && line[0] != "banker" {
+			fmt.Println(line[0])
+			addr, err := memorykeys.GetAddress(line[0])
+			if err != nil {
+				return err
+			}
+			userMap[line[0]] = *addr
+			tx, err := sendEthereum("banker", line[0], etherUtils.OneEther(), 25000, client)
+			checkTxErr(tx, err)
+		}
+	}
+	return nil
+}
+
 func main() {
+	var tx *types.Transaction
+	var ok bool
 	initViper()
 	logName := viper.GetString("log")
 	log.SetOutput(&lumberjack.Logger{
@@ -97,77 +154,93 @@ func main() {
 	})
 	client, err := getClient()
 	chkErr(err)
-
+	input := pflag.String("input", "", "input file")
+	pflag.Parse()
+	if len(*input) == 0 {
+		chkErr(errors.New("no input file specified"))
+	}
 	bankerTx, _ := memorykeys.GetTransactor("banker")
-	txA, _ := memorykeys.GetTransactor("userA")
-	txB, _ := memorykeys.GetTransactor("userB")
-	txC, _ := memorykeys.GetTransactor("userC")
-	tx, err := sendEthereum("banker", "userA", etherUtils.OneEther(), 25000, client)
-	checkTxErr(tx, err)
-	tx, err = sendEthereum("banker", "userB", etherUtils.OneEther(), 25000, client)
-	checkTxErr(tx, err)
-	tx, err = sendEthereum("banker", "userC", etherUtils.OneEther(), 25000, client)
-	checkTxErr(tx, err)
-	// privA, _ := memorykeys.GetPrivateKey("userA")
-	// privB, _ := memorykeys.GetPrivateKey("userB")
-	// privC, _ := memorykeys.GetPrivateKey("userC")
-	// userD, _ := memorykeys.GetAddress("userD")
 
-	srtAddress, tx, srtContract, err := contracts.DeployStakedRevenueToken(bankerTx, client)
+	data, err := readCSV(*input)
+	chkErr(err)
+
+	err = fundUsers(data, client)
+	chkErr(err)
+
+	srtAddress, tx, srtContract, err = contracts.DeployStakedRevenueToken(bankerTx, client, big.NewInt(1))
 	checkTxErr(tx, err)
 	fmt.Println("Contract deployed at ", srtAddress.Hex(), "in tx ", tx.Hash().Hex())
 
-	for pos, Xtx := range []*bind.TransactOpts{bankerTx, txA, txB, txC, bankerTx} {
-		users := []string{"banker", "userA", "userB", "userC", "banker"}
-		fmt.Println(users[pos])
+	for pos, line := range data {
+		Xtx, err := memorykeys.GetTransactor(line[0])
+		chkErr(err)
+		fmt.Println(pos+1, line)
+		switch line[1] {
+		case "profit":
+			bankerTx.Value, ok = etherUtils.StrToEther(line[2])
+			if !ok {
+				chkErr(fmt.Errorf("error in number at line %d (%s)", pos, line[2]))
+			}
+			chkErr(err)
+			tx, err = srtContract.Receive(bankerTx)
+			checkTxErr(tx, err)
+			stats, err := srtContract.Stats(nil)
+			chkErr(err)
+			fmt.Println(
+				"numTokens  :", stats.NumTokens,
+				"Pot  :", etherUtils.EtherToStr(stats.Pot),
+				"PotPerToken  :", etherUtils.EtherToStr(stats.PotPerToken),
+			)
 
-		stats, err := srtContract.Stats(nil)
-		chkErr(err)
-		fmt.Println(
-			etherUtils.EtherToStr(stats.NumTokens),
-			etherUtils.EtherToStr(stats.Pot),
-			etherUtils.EtherToStr(stats.PotPerToken),
-		)
-		addr, err := memorykeys.GetAddress(users[pos])
-		chkErr(err)
-		balData, err := srtContract.Balance(nil, *addr)
-		chkErr(err)
-		fmt.Println(
-			etherUtils.EtherToStr(balData.Tokens),
-			etherUtils.EtherToStr(balData.AccumulatedReward),
-			etherUtils.EtherToStr(balData.LastPotPerToken),
-		)
+		case "deposit":
+			amount, ok := new(big.Int).SetString(line[2], 10)
+			if !ok {
+				chkErr(fmt.Errorf("error in number at line %d (%s)", pos, line[2]))
+			}
+			tx, err = srtContract.DepositTokens(Xtx, amount)
+			checkTxErr(tx, err)
+			stats, err := srtContract.Stats(nil)
+			chkErr(err)
+			fmt.Println(
+				"numTokens  :", stats.NumTokens,
+				"Pot  :", etherUtils.EtherToStr(stats.Pot),
+				"PotPerToken  :", etherUtils.EtherToStr(stats.PotPerToken),
+			)
+		case "wdtoken":
+			addr := userMap[line[0]]
+			fmt.Print("before ")
+			balance(&addr)
+			tx, err = srtContract.WithdrawTokens(Xtx)
+			checkTxErr(tx, err)
+			fmt.Print("after  ")
+			balance(&addr)
+		case "wdprofit":
+			addr := userMap[line[0]]
+			fmt.Print("before ")
+			balance(&addr)
+			tx, err = srtContract.WithDrawRewards(Xtx)
+			checkTxErr(tx, err)
+			fmt.Print("after  ")
+			balance(&addr)
+		case "pending":
+			addr := userMap[line[0]]
+			bbb, err := srtContract.PendingReward(nil, addr)
+			chkErr(err)
+			fmt.Println("pending", etherUtils.EtherToStr(bbb))
+		case "balance":
+			// bal, err := client.BalanceAt(context.Background(), srtAddress, nil)
+			// chkErr(err)
+			// fmt.Println("Balance at all received = ", etherUtils.EtherToStr(bal))
+			addr := userMap[line[0]]
+			balance(&addr)
+		case "stats":
+			stats()
+		case "contractbal":
+			contractBalance()
+		default:
+			chkErr(errors.New("illegal operation :" + line[1]))
+		}
 
-		tx, err = srtContract.DepositTokens(Xtx, etherUtils.OneEther())
-		checkTxErr(tx, err)
-		bankerTx.Value = etherUtils.OneEther()
-		tx, err = srtContract.Receive(bankerTx)
-		checkTxErr(tx, err)
 	}
-	bal, err := client.BalanceAt(context.Background(), srtAddress, nil)
-	chkErr(err)
-	fmt.Println("Balance at all received = ", etherUtils.EtherToStr(bal))
-	stats, err := srtContract.Stats(nil)
-	chkErr(err)
-	fmt.Println(
-		etherUtils.EtherToStr(stats.NumTokens),
-		etherUtils.EtherToStr(stats.Pot),
-		etherUtils.EtherToStr(stats.PotPerToken),
-	)
-	for pos, _ := range []*bind.TransactOpts{txC, txB, txA, bankerTx} {
-		users := []string{"userC", "userB", "userA", "banker"}
-		fmt.Println(users[pos])
-		addr, err := memorykeys.GetAddress(users[pos])
-		chkErr(err)
-		balData, err := srtContract.Balance(nil, *addr)
-		chkErr(err)
-		fmt.Println(
-			etherUtils.EtherToStr(balData.Tokens),
-			etherUtils.EtherToStr(balData.AccumulatedReward),
-			etherUtils.EtherToStr(balData.LastPotPerToken),
-		)
-		// Xtx.Value = nil
-		// tx, err = srtContract.WithDrawRewards(Xtx)
-		// checkTxErr(tx, err)
-	}
+
 }
