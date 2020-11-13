@@ -89,6 +89,9 @@ func checkTxErrB(tx *types.Transaction, err error, expected uint64) {
 	}
 	head, err := baseClient.HeaderByHash(context.Background(), rctp.BlockHash)
 	chkErr(err)
+	if *quiet {
+		return
+	}
 	fmt.Println("Gas Used ", rctp.GasUsed, "timestamp", head.Time)
 }
 
@@ -114,6 +117,7 @@ func balance(addr *common.Address) {
 	bal, err := wethContract.BalanceOf(nil, *addr)
 	chkErr(err)
 	earned, err := stakingContract.Earned(nil, *addr)
+	chkErr(err)
 	fmt.Println(
 		"bal:", etherUtils.EtherToStr(bal),
 		"earned:", etherUtils.EtherToStr(earned),
@@ -121,6 +125,9 @@ func balance(addr *common.Address) {
 }
 
 func stats() {
+	if *quiet {
+		return
+	}
 	rpt, err := stakingContract.RewardPerToken(nil)
 	chkErr(err)
 	bal, err := wethContract.BalanceOf(nil, stakingAddress)
@@ -230,10 +237,13 @@ func endPeriod(client *backends.SimulatedBackend, qualifier string) {
 		jump = 24 * 60 * 60
 	default:
 	}
-	fmt.Println(jump)
 	err = client.AdjustTime(time.Duration(jump) * time.Second)
 	chkErr(err)
 	client.Commit()
+	if *quiet {
+		return
+	}
+	fmt.Println(jump)
 	endHdr, err := client.HeaderByNumber(context.Background(), nil)
 	chkErr(err)
 
@@ -248,9 +258,14 @@ func allBalances() {
 		chkErr(err)
 		ethBal, err := wethContract.BalanceOf(nil, addr)
 		chkErr(err)
-		fmt.Printf("%s : loto : %s, weth : %s\n", name, etherUtils.EtherToStr(lotoBal), etherUtils.EtherToStr(ethBal))
+		earned, err := stakingContract.Earned(nil, addr)
+		chkErr(err)
+
+		fmt.Printf("%8s : loto : %s, weth : %s, earned %s\n", name, etherUtils.EtherToStr(lotoBal), etherUtils.EtherToStr(ethBal), etherUtils.EtherToStr(earned))
 	}
 }
+
+var quiet *bool
 
 func main() {
 	var tx *types.Transaction
@@ -266,6 +281,7 @@ func main() {
 	client, err := getClient()
 	chkErr(err)
 	input := pflag.String("input", "", "input file")
+	quiet = pflag.Bool("quiet", false, "reduce the noise")
 	pflag.Parse()
 	if len(*input) == 0 {
 		pflag.Usage()
@@ -277,6 +293,8 @@ func main() {
 	data, err := readCSV(*input)
 	chkErr(err)
 
+	// deploy three contracts, WETH, LOTO and stakingContract
+	//
 	wethAddress, tx, wethContract, err = contracts.DeployWeth(bankerTx, client)
 	checkTxErr(tx, err)
 	lotoAddress, tx, lotoToken, err = contracts.DeployStakingToken(bankerTx, client)
@@ -284,44 +302,64 @@ func main() {
 	stakingAddress, tx, stakingContract, err = contracts.DeployXStaking(bankerTx, client, *bankerAddress, *bankerAddress, wethAddress, lotoAddress)
 	checkTxErr(tx, err)
 	fmt.Println("Contract deployed at ", stakingAddress.Hex(), "in tx ", tx.Hash().Hex())
-
+	//
+	// supply all accounts from script file with 1 ETH and 100 LOTO
 	err = fundUsers(data, client)
 	chkErr(err)
+
+	// confirm banker is the one to send rewards
+	//
 	userMap["staking"] = stakingAddress
 	rda, err := stakingContract.RewardsDistribution(nil)
 	chkErr(err)
-
 	fmt.Println("RewardsDistribution :", identify(rda))
 
+	// run script
+	//first := true
+	periodRewards := big.NewInt(0)
 	for pos, line := range data {
-		Xtx, err := memorykeys.GetTransactor(line[0])
-		chkErr(err)
-		fmt.Println(pos+1, line)
-		switch line[1] {
-		case "profit":
+
+		// accumulate rewards over each period
+		// update the staking contract with the number at the start of each period
+		{
 			end, err := stakingContract.PeriodFinish(nil)
 			chkErr(err)
 			hdr, err := client.HeaderByNumber(context.Background(), nil)
 			chkErr(err)
 			if hdr.Time > end.Uint64() {
-				fmt.Println("+++++++ PERIOD FINISHED ++++++ ")
+				fmt.Println("+++++++ NEW PERIOD ++++++ ", etherUtils.EtherToStr(periodRewards))
+
+				bankerTx.Value = nil
+				chkErr(err)
+				stats()
+				bankerTx.GasLimit = 1000000
+				tx, err = stakingContract.NotifyRewardAmount(bankerTx, periodRewards)
+				checkTxErr(tx, err)
+				if !*quiet {
+					rr, err := stakingContract.RewardRate(nil)
+					chkErr(err)
+					fmt.Println("Reward Rate", etherUtils.EtherToStr(rr))
+				}
+				periodRewards = big.NewInt(0)
 			}
+		}
+
+		Xtx, err := memorykeys.GetTransactor(line[0])
+		chkErr(err)
+		fmt.Println(pos+1, line)
+		switch line[1] {
+		case "profit":
 
 			reward, ok := etherUtils.StrToEther(line[2])
 			if !ok {
 				chkErr(fmt.Errorf("error in number at line %d (%s)", pos, line[2]))
 			}
+			periodRewards = new(big.Int).Add(periodRewards, reward)
 			bankerTx.Value = nil
 			chkErr(err)
 			tx, err = wethContract.Transfer(bankerTx, stakingAddress, reward)
 			checkTxErr(tx, err)
 			stats()
-			bankerTx.GasLimit = 1000000
-			tx, err = stakingContract.NotifyRewardAmount(bankerTx, reward)
-			checkTxErr(tx, err)
-			rr, err := stakingContract.RewardRate(nil)
-			chkErr(err)
-			fmt.Println("rewardRate", etherUtils.EtherToStr(rr))
 
 		case "deposit":
 			amount, ok := etherUtils.StrToEther(line[2])
@@ -329,21 +367,27 @@ func main() {
 				chkErr(fmt.Errorf("error in number at line %d (%s)", pos, line[2]))
 			}
 			addr := userMap[line[0]]
-			bal, err := lotoToken.BalanceOf(nil, addr)
-			chkErr(err)
-			fmt.Println(line[0], "has", etherUtils.EtherToStr(bal), "LOTO")
+			if !*quiet {
+				bal, err := lotoToken.BalanceOf(nil, addr)
+				chkErr(err)
+				fmt.Println(line[0], "has", etherUtils.EtherToStr(bal), "LOTO")
+			}
 			tx, err = lotoToken.Approve(Xtx, stakingAddress, amount)
 			checkTxErr(tx, err)
 			tx, err = stakingContract.Stake(Xtx, amount)
 			checkTxErr(tx, err)
 		case "wdprofit":
 			addr := userMap[line[0]]
-			fmt.Print("before ")
-			balance(&addr)
+			if !*quiet {
+				fmt.Print("before ")
+				balance(&addr)
+			}
 			tx, err = stakingContract.GetReward(Xtx)
 			checkTxErr(tx, err)
-			fmt.Print("after  ")
-			balance(&addr)
+			if !*quiet {
+				fmt.Print("after  ")
+				balance(&addr)
+			}
 		case "wdtoken":
 			addr := userMap[line[0]]
 			bal, err := lotoToken.BalanceOf(nil, addr)
@@ -353,12 +397,16 @@ func main() {
 			if !ok {
 				chkErr(fmt.Errorf("Bad String %s", line[2]))
 			}
-			fmt.Print("before ")
-			balance(&addr)
+			if !*quiet {
+				fmt.Print("before ")
+				balance(&addr)
+			}
 			tx, err = stakingContract.Withdraw(Xtx, amount)
 			checkTxErr(tx, err)
-			fmt.Print("after  ")
-			balance(&addr)
+			if !*quiet {
+				fmt.Print("after  ")
+				balance(&addr)
+			}
 		case "pending":
 			addr := userMap[line[0]]
 			bbb, err := stakingContract.Earned(nil, addr)

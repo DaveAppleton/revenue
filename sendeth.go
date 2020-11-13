@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"math/big"
 
 	"github.com/DaveAppleton/memorykeys"
@@ -19,7 +18,7 @@ func sendEthereum(sender string, recipientStr string, amount *big.Int, gasLimit 
 
 	nonce, err := client.PendingNonceAt(context.TODO(), *senderAddress)
 	//gasPrice := big.NewInt(gasPrice)
-	fmt.Println("Nonce : ", nonce)
+	//fmt.Println("Nonce : ", nonce)
 	s := types.HomesteadSigner{}
 
 	data := common.FromHex("0x")

@@ -1,0 +1,75 @@
+Contract deployed at  0xa86c577560ea602f9D1df0Bcb333bD674e3fCFcB in tx  0x6aefe89b8587c8c80bb6b421a16b2adb5c3174193a4540964e5ebdcd11582418
+funding accounts
+userA
+userB
+userF
+userC
+RewardsDistribution : banker
++++++++ NEW PERIOD ++++++  0.000000000000000000
+1 [banker profit 10]
+2 [banker day 0]
+3 [banker profit 10]
+4 [banker day 0]
+5 [banker profit 10]
+6 [banker day 0]
+7 [banker profit 10]
+8 [banker day 0]
+9 [banker profit 10]
+10 [banker day 0]
+11 [banker profit 10]
+12 [banker day 0]
+13 [banker profit 10]
+14 [banker day 0]
++++++++ NEW PERIOD ++++++  70.000000000000000000
+15 [banker profit 10]
+16 [userA deposit 100]
+17 [banker day 0]
+18 [banker profit 10]
+19 [banker day 0]
+20 [banker profit 10]
+21 [userB deposit 100]
+22 [banker day 0]
+23 [banker profit 10]
+24 [banker day 0]
+25 [banker profit 10]
+26 [banker day 0]
+27 [banker balances ]
+User Balances
+   userC : loto : 100.000000000000000000, weth : 0.000000000000000000, earned 0.000000000000000000
+  banker : loto : 999600.000000000000000000, weth : 999999999880.000000000000000000, earned 0.000000000000000000
+ staking : loto : 200.000000000000000000, weth : 120.000000000000000000, earned 0.000000000000000000
+   userA : loto : 0.000000000000000000, weth : 0.000000000000000000, earned 35.009837962962738900
+   userB : loto : 0.000000000000000000, weth : 0.000000000000000000, earned 15.002893518518422500
+   userF : loto : 100.000000000000000000, weth : 0.000000000000000000, earned 0.000000000000000000
+28 [banker profit 10]
+29 [banker day 0]
+30 [banker profit 10]
+31 [banker short 0]
+32 [banker profit 10]
+33 [userB wdprofit 0]
+34 [userF deposit 100]
+35 [banker day 0]
++++++++ NEW PERIOD ++++++  80.000000000000000000
+36 [userA exit 1]
+37 [banker day 0]
+38 [banker profit 10]
+39 [userB exit 1]
+40 [userC deposit 5]
+41 [userF exit 0]
+42 [banker endperiod 0]
++++++++ NEW PERIOD ++++++  10.000000000000000000
+43 [banker day 0]
+44 [banker endperiod ]
++++++++ NEW PERIOD ++++++  0.000000000000000000
+45 [userC exit 0]
+46 [banker contractbal ]
+Contract WETH 0.003472222223160290 Contract LOTO 0.000000000000000000
+47 [banker stats ]
+48 [banker balances 0]
+User Balances
+ staking : loto : 0.000000000000000000, weth : 0.003472222223160290, earned 0.000000000000000000
+   userA : loto : 100.000000000000000000, weth : 44.983851410934456300, earned 0.000000000000000000
+   userB : loto : 100.000000000000000000, weth : 30.693176807759969200, earned 0.000000000000000000
+   userF : loto : 100.000000000000000000, weth : 5.757267258755341600, earned 0.000000000000000000
+   userC : loto : 100.000000000000000000, weth : 78.562232300327072610, earned 0.000000000000000000
+  banker : loto : 999600.000000000000000000, weth : 999999999840.000000000000000000, earned 0.000000000000000000
