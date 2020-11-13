@@ -1,0 +1,13 @@
+banker,profit,10
+banker,endperiod,0
+banker,profit,1
+userA,deposit,100
+userB,deposit,100
+userF,deposit,100
+userA,exit,1
+userB,exit,1
+banker,endperiod,0
+userF,exit,0
+banker,contractbal,
+banker,stats,
+banker,balances,0

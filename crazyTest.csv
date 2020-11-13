@@ -1,0 +1,17 @@
+banker,profit,100
+banker,short,0
+banker,profit,10
+userA,deposit,100
+userB,deposit,100
+banker,short,0
+banker,profit,10
+userB,wdprofit,0
+userF,deposit,100
+banker,short,0
+banker,profit,10
+userA,exit,1
+userB,exit,1
+userF,exit,0
+banker,contractbal,
+banker,stats,
+banker,balances,0

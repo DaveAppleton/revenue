@@ -26,15 +26,24 @@ banker,profit,0.023
 banker,profit,0.088
 banker,contractbal,
 userF,deposit,2
-userA,wdtoken,0
-userB,wdtoken,0
-userC,wdtoken,0
+userA,wdtoken,5
+userB,wdtoken,2
+userC,wdtoken,1
 banker,contractbal,
 banker,stats,
-userD,wdtoken,0
-userE,wdtoken,0
-userF,wdtoken,0
+userD,wdtoken,1
+userE,wdtoken,2
+userF,wdtoken,2
 banker,contractbal,
-
+userA,wdprofit,0
+userB,wdprofit,0
+userC,wdprofit,0
+userD,wdprofit,0
+userE,wdprofit,0
+banker,endperiod,0
+userF,wdprofit,0
+banker,contractbal,
+banker,stats,
+banker,balances,0
 
 
